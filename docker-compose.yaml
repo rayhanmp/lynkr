@@ -1,14 +1,39 @@
 services:
-  postgres:
+  db:
+    container_name: db
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: lynkr
       POSTGRES_PASSWORD: lynkr
       POSTGRES_DB: lynkr
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres']
+
+  pgbouncer:
+    container_name: pgbouncer
+    image: edoburu/pgbouncer:latest
+    environment:
+      - DB_USER=lynkr
+      - DB_PASSWORD=lynkr
+      - DB_HOST=db
+      - DB_PORT=5432
+      - AUTH_TYPE=scram-sha-256 # remove/comment this line if using postgres:13 and lower
+      - POOL_MODE=transaction
+      - ADMIN_USERS=postgres,dbuser
+    ports:
+      - "5432:5432"
+    depends_on:
+      - db
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-h', 'postgres']
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6432:6379"
 
 volumes:
   postgres_data:

@@ -23,7 +23,7 @@ export const urls = pgTable('urls', {
         onUpdate: 'cascade',
     }),
     passwordProtected: boolean('password_protected').notNull().default(false),
-    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+    passwordHash: varchar('password_hash', { length: 255 }),
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
