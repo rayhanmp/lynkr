@@ -1,14 +1,20 @@
-import Fastify from 'fastify';
+import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import { db } from './db';
 import { urls } from './db/schema';
 import { eq } from 'drizzle-orm';
 import shortenRoute from './routes/shorten';
 
-const app = Fastify();
+const app = Fastify({
+  logger: {
+    transport: {
+      target: 'pino-pretty'
+    }
+  }
+});
 
 app.register(shortenRoute);
 
-app.get('/:slug', async (req, reply) => {
+app.get('/:slug', async (req: FastifyRequest, reply: FastifyReply) => {
     const { slug } = req.params as { slug: string };
   
     const result = await db.select().from(urls).where(eq(urls.slug, slug));
