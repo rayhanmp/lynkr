@@ -12,6 +12,12 @@ const app = Fastify({
   }
 });
 
+// Register CORS to allow frontend requests
+app.register(import('@fastify/cors'), {
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://localhost:4173'],
+  credentials: true
+});
+
 app.log.info('Registering routes');
 app.register(shortenRoute);
 app.register(redirectRoute);
