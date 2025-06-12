@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import shortenRoute from './routes/shorten';
 import redirectRoute from './routes/redirect';
 import updateSlugRoute from './routes/updateSlug';
+import getAllSlugsRoute from './routes/getAllSlugs';
 
 const app = Fastify({
   logger: {
@@ -15,6 +16,7 @@ app.log.info('Registering routes');
 app.register(shortenRoute);
 app.register(redirectRoute);
 app.register(updateSlugRoute);
+app.register(getAllSlugsRoute);
 
 app.listen({ port: 3000 }, () => {
   console.log('Lynkr running on http://localhost:3000');
