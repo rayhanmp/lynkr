@@ -15,13 +15,18 @@ A truly useful OSS URL Shortener for small to medium sized organisations.
 
 ## 🚀 Features
 
-- **URL Shortening**: Convert long URLs into short, shareable links
-- **Custom Slugs**: Create custom short URLs with your preferred slugs
+- **URL Shortening**: Convert long URLs into short, shareable links with custom slugs
 - **Caching**: Redis-powered caching for fast redirects
 - **Modern Tech Stack**: Built with TypeScript, Fastify, React, and PostgreSQL
 - **Docker Support**: Easy deployment with Docker Compose
-- **Collision Handling**: Automatic retry mechanism for slug generation
-- **Validation**: Robust input validation with Zod schemas
+
+## 🎯 Roadmap
+- [ ] **Analytics**
+- [ ] **Link Lifecycle**
+- [ ] **Smart Redirects**
+- [ ] **Bulk Import/Export**
+- [ ] **QR Codes**
+- [ ] **API Support**
 
 ## 📋 Prerequisites
 
