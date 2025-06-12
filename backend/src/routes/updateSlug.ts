@@ -25,7 +25,7 @@ export default async function updateSlugRoute(app: FastifyInstance) {
       }
       return reply.send({ success: true, newSlug });
     } catch (err: any) {
-      if (err.code === '23505') {
+      if (err.cause?.code === '23505') {
         return reply.code(409).send({ error: 'Slug already exists' });
       }
       return reply.code(500).send({ error: 'Database update failed' });

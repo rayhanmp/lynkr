@@ -4,10 +4,22 @@ import { db } from '../db';
 import { urls } from '../db/schema';
 import { nanoid } from 'nanoid';
 import { config } from '../config/config';
+import bcrypt from 'bcrypt';
 
 const schema = z.object({
   url: z.string().url(),
   customSlug: z.string().min(1).regex(/^[a-zA-Z0-9_-]+$/).max(64).optional(),
+  userId: z.string().uuid().optional(),
+  passwordProtected: z.boolean().default(false),
+  password: z.string().min(1).optional(),
+}).refine((data) => {
+  if (data.passwordProtected && !data.password) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Password is required when passwordProtected is true",
+  path: ["password"],
 });
 
 export default async function shortenRoute(app: FastifyInstance) {
@@ -17,16 +29,28 @@ export default async function shortenRoute(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Invalid input' });
     }
 
-    const { url, customSlug } = parsed.data;
+    const { url, customSlug, userId, passwordProtected, password } = parsed.data;
     const normalisedUrl = new URL(url.trim()).href.replace(/\/+$/, '');
     const baseUrl = config.BASE_URL;
+    
+    // Hash password if provided
+    let passwordHash: string | undefined;
+    if (passwordProtected && password) {
+      passwordHash = await bcrypt.hash(password, 10);
+    }
 
     if (customSlug) {
         try {
-            await db.insert(urls).values({ slug: customSlug, targetUrl: normalisedUrl });
+            await db.insert(urls).values({ 
+              slug: customSlug, 
+              targetUrl: normalisedUrl,
+              userId,
+              passwordProtected,
+              passwordHash
+            });
             return reply.send({ shortUrl: `${baseUrl}/${customSlug}` });
           } catch (err: any) {
-            if (err.code === '23505') {
+            if (err.cause?.code === '23505') {
               return reply.code(409).send({ error: 'Slug already exists' });
             }
             return reply.code(500).send({ error: 'Database insert failed' });
@@ -36,11 +60,17 @@ export default async function shortenRoute(app: FastifyInstance) {
         while (attempts < config.MAX_COLLISION_RETRIES) {
             const generatedSlug = nanoid(config.GENERATED_SLUG_LENGTH);
             try {
-                await db.insert(urls).values({ slug: generatedSlug, targetUrl: normalisedUrl });
+                await db.insert(urls).values({ 
+                  slug: generatedSlug, 
+                  targetUrl: normalisedUrl,
+                  userId,
+                  passwordProtected,
+                  passwordHash
+                });
                 app.log.info({ generatedSlug }, 'Slug generated successfully');
                 return reply.send({ shortUrl: `${baseUrl}/${generatedSlug}` });
             } catch (err: any) {
-                if (err.code === '23505') {
+                if (err.cause?.code === '23505') {
                     attempts++;
                     app.log.warn({ err, attempts }, 'Slug collision detected');
                 } else {
