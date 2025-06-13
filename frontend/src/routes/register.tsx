@@ -1,4 +1,4 @@
-import { GalleryVerticalEnd, Eye, EyeOff } from "lucide-react"
+import { GalleryVerticalEnd, Eye, EyeOff, AlertTriangle } from "lucide-react"
 import { GrainGradient } from '@paper-design/shaders-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -6,7 +6,8 @@ import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import zxcvbn from 'zxcvbn'
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -16,12 +17,73 @@ const registerSchema = z.object({
 
 type RegisterForm = z.infer<typeof registerSchema>
 
+const PasswordStrengthIndicator = ({ password }: { password: string }) => {
+  if (!password) return null;
+  
+  const result = zxcvbn(password)
+  const strength = result.score // 0-4
+  const getStrengthColor = (score: number) => {
+    switch (score) {
+      case 0:
+        return 'bg-red-500'
+      case 1:
+        return 'bg-orange-500'
+      case 2:
+        return 'bg-yellow-500'
+      case 3:
+        return 'bg-green-500'
+      case 4:
+        return 'bg-emerald-500'
+      default:
+        return 'bg-gray-200'
+    }
+  }
+
+  const getStrengthText = (score: number) => {
+    switch (score) {
+      case 0:
+        return 'Very Weak'
+      case 1:
+        return 'Weak'
+      case 2:
+        return 'Medium'
+      case 3:
+        return 'Strong'
+      case 4:
+        return 'Very Strong'
+      default:
+        return ''
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex h-2 w-full gap-1 mt-2">
+        {[...Array(4)].map((_, i) => (
+          <div
+            key={i}
+            className={`h-full w-full rounded-full transition-colors ${
+              i < strength ? getStrengthColor(strength) : 'bg-gray-200'
+            }`}
+          />
+        ))}
+      </div>
+      <div className="flex items-center justify-between text-sm">
+        <span className={getStrengthColor(strength).replace('bg-', 'text-')}>
+          {getStrengthText(strength)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 export const Route = createFileRoute({
   component: Register,
 })
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false)
+  const [password, setPassword] = useState('')
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -50,11 +112,8 @@ export default function Register() {
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <h1 className="text-2xl font-bold">Create an account</h1>
-                <p className="text-balance text-sm text-muted-foreground">
-                  Enter your details below to create your account
-                </p>
+              <div className="flex flex-col gap-2">
+                <h1 className="text-2xl font-bold mb-2">Signup to Lynkr</h1>
               </div>
               <div className="grid gap-6">
                 <div className="grid gap-2">
@@ -62,11 +121,16 @@ export default function Register() {
                   <Input 
                     id="name" 
                     type="text" 
-                    placeholder="Name" 
+                    placeholder="Name"
+                    autoComplete="name"
+                    required
                     {...form.register('name')}
                   />
                   {form.formState.errors.name && (
-                    <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+                    <p className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertTriangle className="h-4 w-4" />
+                      {form.formState.errors.name.message}
+                    </p>
                   )}
                 </div>
                 <div className="grid gap-2">
@@ -75,10 +139,15 @@ export default function Register() {
                     id="email" 
                     type="email" 
                     placeholder="Email" 
+                    autoComplete="email"
+                    required
                     {...form.register('email')}
                   />
                   {form.formState.errors.email && (
-                    <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>
+                    <p className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertTriangle className="h-4 w-4" />
+                      {form.formState.errors.email.message}
+                    </p>
                   )}
                 </div>
                 <div className="grid gap-2">
@@ -88,7 +157,11 @@ export default function Register() {
                       id="password" 
                       type={showPassword ? "text" : "password"}
                       placeholder="Password"
-                      {...form.register('password')}
+                      autoComplete="new-password"
+                      required
+                      {...form.register('password', {
+                        onChange: (e) => setPassword(e.target.value)
+                      })}
                     />
                     <Button
                       type="button"
@@ -104,15 +177,19 @@ export default function Register() {
                       )}
                     </Button>
                   </div>
+                  <PasswordStrengthIndicator password={password} />
                   {form.formState.errors.password && (
-                    <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>
+                    <p className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertTriangle className="h-4 w-4" />
+                      {form.formState.errors.password.message}
+                    </p>
                   )}
                 </div>
                 <Button type="submit" className="w-full">
                   Create Account
                 </Button>
                 <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-                  <span className="relative z-10 bg-background px-2 text-muted-foreground">
+                  <span className="relative z-10 bg-gray-50 px-2 text-muted-foreground">
                     Or continue with
                   </span>
                 </div>
@@ -125,12 +202,17 @@ export default function Register() {
                   </svg>
                   Sign up with GitHub
                 </Button>
-              </div>
-              <div className="text-center text-sm">
-                Already have an account?{" "}
-                <a href="/login" className="underline underline-offset-4">
-                  Login
-                </a>
+                <p className="text-xs text-left text-muted-foreground">
+                  By creating an account, you agree to the{' '}
+                  <a href="/terms" className="underline underline-offset-4 hover:text-primary">
+                    Terms of Service
+                  </a>
+                  . For more information about Lynkr's privacy practices, see the{' '}
+                  <a href="/privacy" className="underline underline-offset-4 hover:text-primary">
+                    Privacy Statement
+                  </a>
+                  .
+                </p>
               </div>
             </form>
           </div>
