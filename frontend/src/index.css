@@ -149,3 +149,12 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  input:-webkit-autofill {
+    @apply text-black;
+    box-shadow: 0 0 0 1000px #f2f6fe inset;
+    -webkit-text-fill-color: black;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+}
