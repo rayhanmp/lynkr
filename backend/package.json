@@ -5,6 +5,7 @@
     "@types/argon2": "^0.14.1",
     "@types/bcrypt": "^5.0.2",
     "argon2": "^0.43.0",
-    "bcrypt": "^6.0.0"
+    "bcrypt": "^6.0.0",
+    "nanoid": "^5.1.5"
   }
 }

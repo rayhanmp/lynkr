@@ -5,11 +5,12 @@ import { users } from '../db/schema';
 import * as argon2 from 'argon2';
 import { eq } from 'drizzle-orm';
 import rateLimit from '@fastify/rate-limit';
+import { nanoid } from 'nanoid';
 
 
 const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
+  name: z.string().min(2, 'Name must be at least 2 characters').max(255, 'Name is too long'),
+  email: z.string().email().max(255).pipe(z.string().transform(val => val.trim().toLowerCase())),
   password: z.string().min(8, 'Password must be at least 8 characters').max(64, 'Password is too long'),
 });
 
@@ -38,48 +39,56 @@ export default async function authRoute(app: FastifyInstance) {
     }
 
     const { name, email, password } = parsed.data;
-
-    try {
-      // Check if email already exists
-      const existingUser = await db.query.users.findFirst({
-        where: eq(users.email, email)
-      });
-
-      if (existingUser) {
-        return reply.code(409).send({ error: 'Email already registered' });
-      }
-
-      // Generate username from email (you might want to make this more sophisticated)
-      const username = email.split('@')[0];
-
-      // Hash password with Argon2
-      const passwordHash = await argon2.hash(password, {
+    
+    const passwordHash = await argon2.hash(password, {
         type: argon2.argon2id, // Using Argon2id variant
         memoryCost: 2 ** 16, // 64 MiB
-        timeCost: 3, // Number of iterations
+        timeCost: 2, // Number of iterations
         parallelism: 1, // Degree of parallelism
       });
+    const baseUsername = email.split('@')[0].slice(0, 10);
 
-      // Create user
-      const [user] = await db.insert(users).values({
-        fullname: name,
-        username,
-        email,
-        passwordHash,
-      }).returning();
+    const MAX_ATTEMPTS = 10;
+    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+      const username = `${baseUsername}${nanoid(4)}`;
+        try {
+        const [user] = await db.insert(users).values({
+            fullname: name,
+            username,
+            email,
+            passwordHash,
+        }).returning();
 
-      // Remove sensitive data before sending response
-      const { passwordHash: _, ...userWithoutPassword } = user;
+        const safeUser = {
+            username: user.username,
+            email: user.email,
+            name: user.fullname,
+        };
 
-      return reply.code(201).send({
-        message: 'User registered successfully',
-        user: userWithoutPassword
-      });
-    } catch (err: any) {
-      app.log.error({ err }, 'Error during user registration');
-      return reply.code(500).send({ error: 'Failed to register user' });
+        app.log.info('User registered successfully');
+        return reply.code(201).send({
+            message: 'User registered successfully',
+            user: safeUser
+        });
+        } catch (err: any) {      
+            // Check for unique constraint violation
+            if (err.cause?.code === '23505') {
+                const detail = err.cause.detail;
+                if (detail?.includes('(email)')) {
+                    return reply.code(409).send({ error: 'Email already registered' });
+                }
+                if (detail?.includes('(username)')) {
+                    app.log.info('Username collision, retrying... - Attempt ' + (i + 1));
+                    continue;
+                }
+            }
+            app.log.warn({ err }, 'Failed to register user');
+            return reply.code(500).send({ error: 'Failed to register user' });
     }
-  });
+  }
+  app.log.error('Failed to generate a unique username after multiple attempts');
+  return reply.code(500).send({ error: 'Failed to generate a unique username after multiple attempts' });
+});
 
   app.post('/api/check-email', {
     config: {
@@ -98,20 +107,30 @@ export default async function authRoute(app: FastifyInstance) {
       }
     }
   }, async (req: FastifyRequest, reply: FastifyReply) => {
-    const emailSchema = z.object({ email: z.string().email() });
+    const emailSchema = z.object({
+        email: z.string().email().max(255).pipe(z.string().transform(val => val.trim().toLowerCase()))
+      });
+
     const parsed = emailSchema.safeParse(req.body);
     
     if (!parsed.success) {
       return reply.code(400).send({ error: 'Invalid email' });
     }
-
+    
     const { email } = parsed.data;
     const existingUser = await db.query.users.findFirst({
       where: eq(users.email, email)
     });
+    
+    req.log.info({
+        ip: req.ip,
+        email: email.replace(/(?<=.).(?=[^@]*?@)/g, '*'),
+        status: existingUser ? 'unavailable' : 'available'
+      }, 'Email availability check');
 
     return reply.send({ 
       status: existingUser ? 'unavailable' : 'available',
     });
+    
   });
 } 
