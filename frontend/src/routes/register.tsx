@@ -33,7 +33,10 @@ const registerSchema = z.object({
     .refine(async (val) => await checkEmailAvailability(val), {
       message: 'We couldn’t use that email. Try another one.',
     }),
-  password: z.string().min(8, 'Password is too short').max(64, 'Password is too long'),
+  password: z.string().min(8, 'Password is too short').max(64, 'Password is too long')
+    .refine(val => zxcvbn(val).score >= 3, {
+      message: 'Password is too weak. Try another one.',
+    }),
 })
 
 type RegisterForm = z.infer<typeof registerSchema>
