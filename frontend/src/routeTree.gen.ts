@@ -13,6 +13,8 @@ import type { CreateFileRoute, FileRoutesByPath } from '@tanstack/react-router'
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TagsRouteImport } from './routes/tags'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as FoldersRouteImport } from './routes/folders'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
@@ -25,6 +27,16 @@ const TagsRoute = TagsRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FoldersRoute = FoldersRouteImport.update({
@@ -47,6 +59,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/folders': typeof FoldersRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/tags': typeof TagsRoute
 }
@@ -54,6 +68,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/folders': typeof FoldersRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/tags': typeof TagsRoute
 }
@@ -62,21 +78,47 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/folders': typeof FoldersRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/tags': typeof TagsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/analytics' | '/folders' | '/register' | '/tags'
+  fullPaths:
+    | '/'
+    | '/analytics'
+    | '/folders'
+    | '/login'
+    | '/profile'
+    | '/register'
+    | '/tags'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/analytics' | '/folders' | '/register' | '/tags'
-  id: '__root__' | '/' | '/analytics' | '/folders' | '/register' | '/tags'
+  to:
+    | '/'
+    | '/analytics'
+    | '/folders'
+    | '/login'
+    | '/profile'
+    | '/register'
+    | '/tags'
+  id:
+    | '__root__'
+    | '/'
+    | '/analytics'
+    | '/folders'
+    | '/login'
+    | '/profile'
+    | '/register'
+    | '/tags'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
   FoldersRoute: typeof FoldersRoute
+  LoginRoute: typeof LoginRoute
+  ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   TagsRoute: typeof TagsRoute
 }
@@ -102,6 +144,20 @@ declare module '@tanstack/react-router' {
       path: '/folders'
       fullPath: '/folders'
       preLoaderRoute: typeof FoldersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -148,6 +204,24 @@ declare module './routes/folders' {
     FileRoutesByPath['/folders']['fullPath']
   >
 }
+declare module './routes/login' {
+  const createFileRoute: CreateFileRoute<
+    '/login',
+    FileRoutesByPath['/login']['parentRoute'],
+    FileRoutesByPath['/login']['id'],
+    FileRoutesByPath['/login']['path'],
+    FileRoutesByPath['/login']['fullPath']
+  >
+}
+declare module './routes/profile' {
+  const createFileRoute: CreateFileRoute<
+    '/profile',
+    FileRoutesByPath['/profile']['parentRoute'],
+    FileRoutesByPath['/profile']['id'],
+    FileRoutesByPath['/profile']['path'],
+    FileRoutesByPath['/profile']['fullPath']
+  >
+}
 declare module './routes/register' {
   const createFileRoute: CreateFileRoute<
     '/register',
@@ -171,6 +245,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
   FoldersRoute: FoldersRoute,
+  LoginRoute: LoginRoute,
+  ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   TagsRoute: TagsRoute,
 }

@@ -60,11 +60,11 @@ function Index() {
   }
 
   return (
-    <div className="px-8 py-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Links</h1>
-        <button className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-colors text-sm">Create link</button>
-      </div>
+      <div className="px-8 py-6 max-w-5xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Links</h1>
+          <button className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-colors text-sm">Create link</button>
+        </div>
 
       <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
         {data?.slugs.length === 0 ? (
