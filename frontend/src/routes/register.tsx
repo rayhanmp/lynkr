@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useState } from 'react'
 import zxcvbn from 'zxcvbn'
+import { debouncePromise } from '@/lib/utils'
 
 const checkEmailAvailability = async (email: string): Promise<boolean> => {
   const res = await fetch('http://localhost:3000/api/check-email', {
@@ -24,13 +25,15 @@ const checkEmailAvailability = async (email: string): Promise<boolean> => {
   return data.status === 'available';
 }; 
 
+const checkEmailAvailabilityDebounced = debouncePromise(checkEmailAvailability, 600)
+
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string()
     .min(1, 'Email is required')
     .email('Invalid email address')
     .transform(val => val.trim().toLowerCase())
-    .refine(async (val) => await checkEmailAvailability(val), {
+    .refine(async (val) => await checkEmailAvailabilityDebounced(val), {
       message: 'We couldn’t use that email. Try another one.',
     }),
   password: z.string().min(8, 'Password is too short').max(64, 'Password is too long')
@@ -164,6 +167,7 @@ export default function Register() {
                 <div className="grid gap-2">
                   <Label htmlFor="name">Name</Label>
                   <Input 
+                    autoFocus
                     id="name" 
                     type="text" 
                     placeholder="Name"
