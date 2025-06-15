@@ -2,9 +2,19 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db';
 import { urls } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { validateSession } from './auth';
+import { users } from '../db/schema';
 
 export default async function getSlugsRoute(app: FastifyInstance) {
-  app.get('/slugs', async (req: FastifyRequest, reply: FastifyReply) => {
+  app.get('/slugs', { preHandler: validateSession } , async (req: FastifyRequest, reply: FastifyReply) => {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, req.session!.userId)
+    });
+    console.log(user);
+    if (!user) {
+      return reply.code(401).send({ error: 'Unauthorized' });
+    }
+
     try {
       const allSlugs = await db.select({
         id: urls.id,
@@ -13,7 +23,8 @@ export default async function getSlugsRoute(app: FastifyInstance) {
         isActive: urls.isActive,
         createdAt: urls.createdAt,
         updatedAt: urls.updatedAt
-      }).from(urls);
+      }).from(urls)
+      .where(eq(urls.userId, req.session!.userId));
 
       return reply.send({ 
         success: true,
