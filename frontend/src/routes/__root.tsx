@@ -1,7 +1,7 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import '../index.css'
-import Sidebar from '@/components/Sidebar'
+import Sidebar from '@/components/sidebar'
 
 export const Route = createRootRoute({
   component: RootLayout,
