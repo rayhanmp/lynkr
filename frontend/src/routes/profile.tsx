@@ -8,6 +8,7 @@ interface User {
   username: string;
   email: string;
   name: string;
+  isVerified: boolean;
 }
 
 async function fetchUserProfile() {
@@ -139,6 +140,10 @@ export default function Profile() {
                 <div className="grid gap-2">
                   <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
                   <p className="text-lg">{user?.email}</p>
+                </div>
+                <div className="grid gap-2">
+                  <h3 className="text-sm font-medium text-muted-foreground">Verified</h3>
+                  <p className="text-lg">{user?.isVerified ? 'Yes' : 'No'}</p>
                 </div>
                 <div className="pt-4">
                   <button 

@@ -1,4 +1,6 @@
 import redis from '../services/redis';
+import { createHash } from 'crypto';
+import { Resend } from 'resend';
 
 export const sessionExpiresInSeconds = 60 * 60 * 24; // 1 day
 
@@ -101,4 +103,65 @@ export async function validateSessionToken(token: string): Promise<Session | nul
 
 export async function deleteSession(sessionId: string): Promise<void> {
     await redis.del(sessionId);
+}
+
+export async function createVerificationToken(userId: string): Promise<string> {
+  const verificationToken = generateSecureRandomString();
+  const hashedVerificationToken = createHash('sha256').update(verificationToken, 'utf8').digest('hex');
+  
+  // Set the verification token in Redis with a 15 minute expiration
+  await redis.set(`verify:${hashedVerificationToken}`, userId, 'EX', 900, 'NX');
+
+  return verificationToken;
+}
+
+export async function sendVerificationEmail(email: string, verificationToken: string) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const frontendUrl = process.env.FRONTEND_URL;
+
+  if (!resendApiKey || !frontendUrl) {
+    throw new Error('Missing required environment variables: RESEND_API_KEY or FRONTEND_URL');
+  }
+
+  const resend = new Resend(resendApiKey);
+  const verificationLink = `${frontendUrl}/api/verify?token=${verificationToken}`;
+
+  await resend.emails.send({
+    from: 'Lynkr <noreply@lynkr.rayhan.id>',
+    to: [email],
+    subject: 'Confirm your email address',
+    html: `
+      <div style="font-family: system-ui, -apple-system, sans-serif; color: #1a1a1a; line-height: 1.5;">
+        <h2 style="color: #333;">Welcome to <strong>Lynkr</strong> 👋</h2>
+        <p>You're almost ready to start using Lynkr. Please confirm your email address by clicking the button below:</p>
+        <p style="margin: 20px 0;">
+          <a href="${verificationLink}" 
+             style="display: inline-block; background-color: #4f46e5; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 6px;">
+            Verify Email
+          </a>
+        </p>
+        <p>If the button doesn't work, you can also copy and paste this URL into your browser:</p>
+        <p style="word-break: break-all;">
+          <a href="${verificationLink}">${verificationLink}</a>
+        </p>
+        <hr style="margin: 32px 0;" />
+        <p style="font-size: 0.9em; color: #555;">
+          If you didn't request this, you can safely ignore this email.
+        </p>
+        <p style="font-size: 0.9em; color: #555;">— The Lynkr Team</p>
+      </div>
+    `,
+    text: `
+Welcome to Lynkr!
+
+Please confirm your email address by visiting the following link:
+${verificationLink}
+
+The link will expire in 15 minutes. If you need a new link, kindly request a new verification email.
+
+If you didn't request this, you can safely ignore this email.
+
+— The Lynkr Team
+    `,
+  });
 }

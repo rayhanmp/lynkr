@@ -3,10 +3,12 @@ import { z } from 'zod';
 import { db } from '../db';
 import { users } from '../db/schema';
 import * as argon2 from 'argon2';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import rateLimit from '@fastify/rate-limit';
 import { nanoid } from 'nanoid';
-import { Session, SessionWithToken, createSession, validateSessionToken, deleteSession, sessionExpiresInSeconds } from '../utils/authUtil';
+import { Session, SessionWithToken, createSession, validateSessionToken, deleteSession, sessionExpiresInSeconds, createVerificationToken, sendVerificationEmail } from '../utils/authUtil';
+import { createHash } from 'crypto';
+import redis from '../services/redis';
 
 // Declare module to add session and validatedBody to FastifyRequest
 declare module 'fastify' {
@@ -109,6 +111,10 @@ export default async function authRoute(app: FastifyInstance) {
         };
 
         app.log.info('User registered successfully');
+        const verificationToken = await createVerificationToken(user.id);
+        const resend = await sendVerificationEmail(user.email, verificationToken);
+        app.log.info(resend);
+        app.log.info('Verification email sent to ' + user.email);
         return reply.code(201).send({
             message: 'User registered successfully',
             user: safeUser
@@ -129,6 +135,15 @@ export default async function authRoute(app: FastifyInstance) {
             return reply.code(500).send({ error: 'Failed to register user' });
     }
   }
+
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, email)
+  });
+
+  if (!user) {
+    return reply.code(401).send({ error: 'Invalid credentials' });
+  }
+
   app.log.error('Failed to generate a unique username after multiple attempts');
   return reply.code(500).send({ error: 'Failed to generate a unique username after multiple attempts' });
 });
@@ -240,8 +255,37 @@ export default async function authRoute(app: FastifyInstance) {
             username: user.username,
             email: user.email,
             name: user.fullname,
+            isVerified: user.isVerified,
         };
     
         return reply.code(200).send({ user: safeUser });
+    });
+
+    app.get('/api/verify', async (req: FastifyRequest, reply: FastifyReply) => {
+
+      const { token } = req.query as { token: string };
+      const hashedToken = createHash('sha256').update(token, 'utf8').digest('hex');
+
+      const userId = await redis.get(`verify:${hashedToken}`);
+      if (!userId) {
+        req.log.info({ ip: req.ip, ua: req.headers['user-agent'] }, 'Invalid token');
+        return reply.redirect('/login?verify=invalid');
+      }
+      
+      // Delete the token after successful retrieval to prevent reuse
+      await redis.del(`verify:${hashedToken}`);
+
+      const { rowCount } = await db
+        .update(users)
+        .set({ isVerified: true, verifiedAt: new Date() })
+        .where(and(eq(users.id, userId), eq(users.isVerified, false)));
+
+      req.log.info(
+        { userId, rowCount, ip: req.ip },
+        rowCount ? 'Email verified' : 'Email already verified'
+      );
+      
+      return reply.redirect('/login?verify=success');
+
     });
 } 
