@@ -21,12 +21,7 @@ A truly useful OSS URL Shortener for small to medium sized organisations.
 - **Docker Support**: Easy deployment with Docker Compose
 
 ## 🎯 Roadmap
-- [ ] **Analytics**
-- [ ] **Link Lifecycle**
-- [ ] **Smart Redirects**
-- [ ] **Bulk Import/Export**
-- [ ] **QR Codes**
-- [ ] **API Support**
+Full roadmap can be accessed on [Lynkr Featurebase](https://lynkr.featurebase.app/roadmap).
 
 ## 📋 Prerequisites
 
