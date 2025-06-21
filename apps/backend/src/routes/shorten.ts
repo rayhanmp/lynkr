@@ -1,30 +1,14 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { z } from 'zod';
+import { createLinkSchema, type CreateLinkData } from '@lynkr/shared';
 import { db } from '../db';
 import { urls } from '../db/schema';
 import { nanoid } from 'nanoid';
 import { config } from '../config/config';
 import bcrypt from 'bcrypt';
 
-const schema = z.object({
-  url: z.string().url(),
-  customSlug: z.string().min(1).regex(/^[a-zA-Z0-9_-]+$/).max(64).optional(),
-  userId: z.string().uuid().optional(),
-  passwordProtected: z.boolean().default(false),
-  password: z.string().min(1).optional(),
-}).refine((data) => {
-  if (data.passwordProtected && !data.password) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Password is required when passwordProtected is true",
-  path: ["password"],
-});
-
 export default async function shortenRoute(app: FastifyInstance) {
   app.post('/shorten', async (req: FastifyRequest, reply: FastifyReply) => {
-    const parsed = schema.safeParse(req.body);
+    const parsed = createLinkSchema.safeParse(req.body);
     if (!parsed.success) {
       return reply.code(400).send({ error: 'Invalid input' });
     }

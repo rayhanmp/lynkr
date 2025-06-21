@@ -1,12 +1,12 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { z } from 'zod';
+import { registerSchema, loginSchema, emailSchema, type RegisterData, type LoginData, type EmailData } from '@lynkr/shared';
 import { db } from '../db';
 import { users } from '../db/schema';
 import * as argon2 from 'argon2';
 import { eq, and } from 'drizzle-orm';
 import rateLimit from '@fastify/rate-limit';
 import { nanoid } from 'nanoid';
-import { Session, SessionWithToken, createSession, validateSessionToken, deleteSession, sessionExpiresInSeconds, createVerificationToken, sendVerificationEmail } from '../utils/authUtil';
+import { Session, createSession, validateSessionToken, deleteSession, sessionExpiresInSeconds, createVerificationToken, sendVerificationEmail } from '../utils/authUtil';
 import { createHash } from 'crypto';
 import redis from '../services/redis';
 
@@ -18,19 +18,7 @@ declare module 'fastify' {
   }
 }
 
-// Schemas
-const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').max(255, 'Name is too long'),
-  email: z.string().email().max(255).pipe(z.string().transform(val => val.trim().toLowerCase())),
-  password: z.string().min(8, 'Password must be at least 8 characters').max(64, 'Password is too long'),
-});
 
-const loginSchema = z.object({
-    email: z.string().email(),
-    password: z.string()
-  });
-
-// Input validation
 async function validateRegisterInput(req: FastifyRequest, reply: FastifyReply) {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -165,10 +153,6 @@ export default async function authRoute(app: FastifyInstance) {
       }
     }
   }, async (req: FastifyRequest, reply: FastifyReply) => {
-    const emailSchema = z.object({
-        email: z.string().email().max(255).pipe(z.string().transform(val => val.trim().toLowerCase()))
-      });
-
     const parsed = emailSchema.safeParse(req.body);
     
     if (!parsed.success) {

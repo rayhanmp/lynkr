@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@lynkr/shared": "workspace:*",
     "@paper-design/shaders-react": "^0.0.39",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",

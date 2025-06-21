@@ -27,7 +27,7 @@ const checkEmailAvailability = async (email: string): Promise<boolean> => {
 
 const checkEmailAvailabilityDebounced = debouncePromise(checkEmailAvailability, 600)
 
-const registerSchema = z.object({
+const frontendRegisterSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string()
     .min(1, 'Email is required')
@@ -42,7 +42,7 @@ const registerSchema = z.object({
     }),
 })
 
-type RegisterForm = z.infer<typeof registerSchema>
+type RegisterForm = z.infer<typeof frontendRegisterSchema>
 
 const PasswordStrengthIndicator = ({ password }: { password: string }) => {
   if (!password) return null;
@@ -112,7 +112,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false)
   const [password, setPassword] = useState('')
   const form = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(frontendRegisterSchema),
     mode: 'onBlur',
     defaultValues: {
       name: '',
