@@ -1,5 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Link2, BarChart3, Shield, Zap, Server,  Users, Sparkles, Smile, Soup } from "lucide-react"

@@ -50,4 +50,8 @@ tmp/
 temp/
 
 # Docker
-.dockerignore 
+.dockerignore
+
+# Turborepo
+.turbo/
+.turbo

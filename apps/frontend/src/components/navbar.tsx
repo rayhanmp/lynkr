@@ -94,14 +94,14 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-4">
             <Button 
               variant="outline" 
-              className="border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+              className="border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
               onClick={() => window.location.href = '/login'}
               aria-label="Go to login page"
             >
               Login
             </Button>
             <Button 
-              className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+              className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 cursor-pointer text-white focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
               onClick={() => window.location.href = '/dashboard'}
               aria-label="Go to registration page"
             >

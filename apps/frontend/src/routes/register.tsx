@@ -23,7 +23,7 @@ const checkEmailAvailability = async (email: string): Promise<boolean> => {
 
   const data = await res.json();
   return data.status === 'available';
-}; 
+};
 
 const checkEmailAvailabilityDebounced = debouncePromise(checkEmailAvailability, 600)
 
