@@ -10,11 +10,13 @@ import { HelpCircle, Lock } from "lucide-react"
 import { useEffect, useState } from 'react'
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { createLinkSchema, type CreateLinkData } from '@lynkr/shared'
 
 export const Route = createFileRoute({
   component: Dashboard,
 })
+
+type CreateLinkFormData = CreateLinkData
 
 interface Slug {
   id: number
@@ -52,25 +54,6 @@ const FieldLabel = ({ children, tooltip }: { children: React.ReactNode, tooltip:
     </Tooltip>
   </div>
 )
-
-const createLinkSchema = z.object({
-  url: z.string()
-    .transform((val) => {
-      // If the URL doesn't start with http:// or https://, add https://
-      if (!val.startsWith('http://') && !val.startsWith('https://')) {
-        return `https://${val}`;
-      }
-      return val;
-    })
-    .pipe(z.string().url("Please enter a valid URL")),
-  customSlug: z.string()
-    .regex(/^[a-zA-Z0-9-_]*$/, "Only letters, numbers, hyphens, and underscores are allowed")
-    .optional(),
-  comments: z.string().optional(),
-  isOneTime: z.boolean(),
-})
-
-type CreateLinkFormData = z.infer<typeof createLinkSchema>
 
 function PasswordDialog({ password, setPassword }: { password: string, setPassword: (value: string) => void }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -127,9 +110,10 @@ function CreateLinkDialog({ isOpen, onOpenChange }: { isOpen: boolean, onOpenCha
     setValue,
     setFocus,
   } = useForm<CreateLinkFormData>({
-    resolver: zodResolver(createLinkSchema),
+    resolver: zodResolver(createLinkSchema) as any,
     defaultValues: {
       isOneTime: false,
+      passwordProtected: false,
     }
   })
 

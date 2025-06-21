@@ -7,10 +7,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf dist build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@lynkr/shared": "workspace:*",
     "@paper-design/shaders-react": "^0.0.39",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",

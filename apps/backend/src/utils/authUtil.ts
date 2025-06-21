@@ -1,52 +1,14 @@
 import redis from '../services/redis';
 import { createHash } from 'crypto';
 import { Resend } from 'resend';
+import { constantTimeEqual, generateSecureRandomString, bufferToBase64, base64ToBuffer } from '@lynkr/shared';
 
 export const sessionExpiresInSeconds = 60 * 60 * 24; // 1 day
-
-export const generateSecureRandomString = () => {
-    const alphabet = "abcdefghijklmnpqrstuvwxyz23456789";
-    const alphabetLength = alphabet.length;
-    const length = 24;
-
-    const bytes = new Uint8Array(24);
-    crypto.getRandomValues(bytes);
-
-	let id = "";
-
-    for (let i = 0; i < bytes.length && id.length < length; i++) {
-        const index = bytes[i] % alphabetLength;
-        if (bytes[i] - index <= 256 - alphabetLength) {
-          id += alphabet[index];
-        }
-    }
-
-	return id;
-}
-
-export function bufferToBase64(buf: Uint8Array): string {
-    return Buffer.from(buf).toString("base64");
-  }
-  
-export function base64ToBuffer(str: string): Uint8Array {
-    return new Uint8Array(Buffer.from(str, "base64"));
-  }
 
 export async function hashSecret(secret: string) {
 	const secretBytes = new TextEncoder().encode(secret);
 	const secretHashBuffer = await crypto.subtle.digest("SHA-256", secretBytes);
 	return new Uint8Array(secretHashBuffer);
-}
-
-export function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
-	if (a.byteLength !== b.byteLength) {
-		return false;
-	}
-	let c = 0;
-	for (let i = 0; i < a.byteLength; i++) {
-		c |= a[i] ^ b[i];
-	}
-	return c === 0;
 }
 
 // Types
@@ -62,8 +24,8 @@ export interface Session {
 }
 
 export async function createSession(userId: string): Promise<SessionWithToken> {
-    const id = generateSecureRandomString();
-    const secret = generateSecureRandomString();
+    const id = generateSecureRandomString(24);
+    const secret = generateSecureRandomString(24);
     const hashedSecret = await hashSecret(secret);
 
     const token = id + ":" + secret;
@@ -106,7 +68,7 @@ export async function deleteSession(sessionId: string): Promise<void> {
 }
 
 export async function createVerificationToken(userId: string): Promise<string> {
-  const verificationToken = generateSecureRandomString();
+  const verificationToken = generateSecureRandomString(24);
   const hashedVerificationToken = createHash('sha256').update(verificationToken, 'utf8').digest('hex');
   
   // Set the verification token in Redis with a 15 minute expiration

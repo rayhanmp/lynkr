@@ -1,0 +1,21 @@
+{
+  "name": "@lynkr/shared",
+  "version": "1.0.0",
+  "description": "Shared validation schemas and utilities for Lynkr",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "type": "module",
+  "dependencies": {
+    "zod": "^3.25.63"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "rimraf": "^6.0.1"
+  }
+} 

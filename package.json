@@ -1,0 +1,20 @@
+{
+  "name": "lynkr",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
+    "type-check": "turbo type-check"
+  },
+  "devDependencies": {
+    "turbo": "^2.2.8",
+    "rimraf": "^6.0.1"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "workspaces": [
+    "apps/backend",
+    "apps/frontend"
+  ]
+} 
