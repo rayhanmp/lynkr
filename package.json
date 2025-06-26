@@ -6,7 +6,10 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "clean": "turbo clean",
-    "type-check": "turbo type-check"
+    "type-check": "turbo type-check",
+    "test": "turbo test",
+    "test:run": "turbo test:run",
+    "test:coverage": "turbo test:coverage"
   },
   "devDependencies": {
     "turbo": "^2.2.8",
